@@ -60,91 +60,94 @@
             top: 0;
             left: 0;
             right: 0;
-            padding: 6px 8px;
+            padding: 8px 12px;
             background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%);
             color: white;
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto auto;
             align-items: center;
             font-size: 10px;
             z-index: 10;
-            border-bottom: 2px solid #ffd93d;
-            gap: 4px;
-            flex-wrap: nowrap;
-            overflow: hidden;
+            border-bottom: 3px solid #ffd93d;
+            gap: 12px;
         }
 
         .game-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-            min-width: 0;
+            gap: 12px;
+            grid-column: 1;
         }
 
         .gmb-logo-img {
-            width: 32px;
-            height: 32px;
+            width: 50px;
+            height: 50px;
             object-fit: contain;
             filter: drop-shadow(0 0 8px rgba(255, 217, 61, 0.5));
             flex-shrink: 0;
         }
 
         .game-title {
-            font-size: 9px;
+            font-size: 14px;
             color: #ffd93d;
             text-shadow: 2px 2px 0 #000;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            flex-shrink: 1;
+            font-weight: bold;
         }
 
         .ui-element {
-            padding: 2px 3px;
+            padding: 4px 8px;
             text-shadow: 1px 1px 0 #000;
             display: flex;
             align-items: center;
-            gap: 2px;
-            font-size: 7px;
+            gap: 4px;
+            font-size: 10px;
             white-space: nowrap;
-            flex-shrink: 0;
+            font-weight: bold;
         }
 
         .lives { 
             color: #ff6b6b;
-            display: flex;
-            align-items: center;
-            gap: 2px;
+            grid-column: 2;
         }
 
         .heart-container {
             display: flex;
-            gap: 1px;
+            gap: 2px;
         }
 
         .heart-img {
-            width: 14px;
-            height: 14px;
+            width: 18px;
+            height: 18px;
             object-fit: contain;
             margin: 0;
         }
         
         .timer { 
             color: #ffd93d; 
-            font-size: 11px;
+            font-size: 10px;
+            grid-column: 3;
         }
 
         .timer.warning {
             color: #ff6b6b;
+            animation: pulse 0.5s infinite;
         }
         
         .score { 
-            color: #6bcf7f; 
+            color: #6bcf7f;
+            grid-column: 4;
         }
 
         .difficulty {
             color: #ff9f40;
-            font-size: 8px;
+            font-size: 10px;
+            grid-column: 5;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
         }
 
         #controls {
@@ -413,13 +416,13 @@
             </div>
             
             <div class="ui-element lives">
-                <span>❤️:</span>
+                <span>HEARTS:</span>
                 <div class="heart-container" id="heartsDisplay"></div>
             </div>
             
-            <div class="ui-element timer" id="timerDisplay">⏱️ <span id="timer">60</span>s</div>
-            <div class="ui-element score">💰 <span id="score">0</span></div>
-            <div class="ui-element difficulty">⚡ <span id="speed">1.0</span>x</div>
+            <div class="ui-element timer" id="timerDisplay"><span>TIME:</span> <span id="timer">60</span>s</div>
+            <div class="ui-element score"><span>SCORE:</span> <span id="score">0</span></div>
+            <div class="ui-element difficulty"><span>SPEED:</span> <span id="speed">1.0</span>x <span>↑</span></div>
         </div>
         
         <canvas id="gameCanvas"></canvas>
@@ -564,12 +567,9 @@
                     this.speed = (1.5 + Math.random() * 0.5) * shipSpeed;
                     this.containers = [];
                     this.hasScored = {};
-                    // FIXED: Prevent duplicate colors from spawning on screen
-                    let newColor = containerColors[Math.floor(Math.random() * containerColors.length)];
-                    while (ships.some(s => s.x < canvas.width && s.x > -s.width && s.requiredColor === newColor)) {
-                        newColor = containerColors[Math.floor(Math.random() * containerColors.length)];
-                    }
-                    this.requiredColor = newColor;
+                    
+                    // FIXED: Don't use infinite loop - just pick random color
+                    this.requiredColor = containerColors[Math.floor(Math.random() * containerColors.length)];
                 }
             }
 
@@ -699,7 +699,7 @@
                             const audio = new Audio(url);
                             audio.play().catch(() => {});
                         };
-                        playAudio('crane_commander/static/assets/sounds/success.wav');
+                        playAudio('crane_commander/static/assets/sounds/success.mp3');
                         
                         // FIXED: Bonus ONLY awarded here on successful drop
                         timeLeft += 2;
@@ -724,7 +724,7 @@
                         const audio = new Audio(url);
                         audio.play().catch(() => {});
                     };
-                    playAudio('crane_commander/static/assets/sounds/fail.wav');
+                    playAudio('crane_commander/static/assets/sounds/fail.mp3');
                     createParticles(container.x + container.width/2, container.y, '#ff0000', 15);
                 } else {
                     container.grabbed = false;
@@ -858,24 +858,12 @@
 
         function pickContainer() {
             if (gameState !== 'playing') return;
-            if (gantry.pick()) {
-                const playAudio = (url) => {
-                    const audio = new Audio(url);
-                    audio.play().catch(() => {});
-                };
-                playAudio('crane_commander/static/assets/sounds/pick.wav');
-            }
+            gantry.pick();
         }
 
         function dropContainer() {
             if (gameState !== 'playing') return;
-            if (gantry.drop()) {
-                const playAudio = (url) => {
-                    const audio = new Audio(url);
-                    audio.play().catch(() => {});
-                };
-                playAudio('crane_commander/static/assets/sounds/drop.wav');
-            }
+            gantry.drop();
         }
 
         document.addEventListener('keydown', (e) => {
@@ -909,12 +897,12 @@
                     const hasMatchingContainer = containers.find(c => 
                         !c.grabbed && !c.loaded && c.color === shipColor
                     );
-                    if (!hasMatchingContainer) {
+                    if (!hasMatchingContainer && containers.length < 10) {
                         // Find an empty slot
                         for (let i = 1; i <= 10; i++) {
                             const slotX = i * spacing;
                             const hasContainer = containers.find(c => 
-                                !c.grabbed && !c.loaded && Math.abs(c.x - (slotX - 30)) < 40
+                                Math.abs(c.x - slotX) < 50
                             );
                             if (!hasContainer) {
                                 containers.push(new Container(slotX - 30, 110, shipColor));
@@ -924,13 +912,20 @@
                     }
                 }
                 
-                // Fill remaining slots with random colors
+                // Fill remaining slots with DIVERSE random colors
                 if (containers.length < 10) {
-                    const spacing = canvas.width / 12;
+                    const colorRotation = ['#ff6b6b', '#6bcf7f', '#4dabf7', '#ffd93d', '#ff9f40'];
+                    let colorIndex = 0;
+                    
                     for (let i = 1; i <= 10; i++) {
-                        if (!containers.find(c => Math.abs(c.x - i * spacing) < 40)) {
-                            const randomColor = containerColors[Math.floor(Math.random() * containerColors.length)];
-                            containers.push(new Container(i * spacing - 30, 110, randomColor));
+                        const slotX = i * spacing;
+                        const hasContainer = containers.find(c => 
+                            Math.abs(c.x - slotX) < 50
+                        );
+                        if (!hasContainer) {
+                            // Cycle through colors for diversity
+                            containers.push(new Container(slotX - 30, 110, colorRotation[colorIndex % colorRotation.length]));
+                            colorIndex++;
                         }
                     }
                 }
