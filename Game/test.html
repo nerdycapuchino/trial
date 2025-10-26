@@ -60,55 +60,66 @@
             top: 0;
             left: 0;
             right: 0;
-            padding: 8px 12px;
+            padding: 8px 10px;
             background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%);
             color: white;
-            display: grid;
-            grid-template-columns: auto 1fr auto auto auto auto;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            font-size: 10px;
+            font-size: 9px;
             z-index: 10;
             border-bottom: 3px solid #ffd93d;
-            gap: 12px;
+            gap: 8px;
+            flex-wrap: wrap;
+            row-gap: 4px;
         }
 
         .game-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            grid-column: 1;
+            gap: 8px;
+            flex: 0 0 auto;
         }
 
         .gmb-logo-img {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             object-fit: contain;
             filter: drop-shadow(0 0 8px rgba(255, 217, 61, 0.5));
             flex-shrink: 0;
         }
 
         .game-title {
-            font-size: 14px;
+            font-size: 12px;
             color: #ffd93d;
             text-shadow: 2px 2px 0 #000;
             white-space: nowrap;
             font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .ui-stats {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex: 0 0 auto;
         }
 
         .ui-element {
-            padding: 4px 8px;
+            padding: 3px 6px;
             text-shadow: 1px 1px 0 #000;
             display: flex;
             align-items: center;
-            gap: 4px;
-            font-size: 10px;
+            gap: 3px;
+            font-size: 8px;
             white-space: nowrap;
             font-weight: bold;
+            background: rgba(0,0,0,0.5);
+            border-radius: 3px;
         }
 
         .lives { 
             color: #ff6b6b;
-            grid-column: 2;
         }
 
         .heart-container {
@@ -117,16 +128,15 @@
         }
 
         .heart-img {
-            width: 18px;
-            height: 18px;
+            width: 14px;
+            height: 14px;
             object-fit: contain;
             margin: 0;
         }
         
         .timer { 
             color: #ffd93d; 
-            font-size: 10px;
-            grid-column: 3;
+            font-size: 8px;
         }
 
         .timer.warning {
@@ -136,18 +146,50 @@
         
         .score { 
             color: #6bcf7f;
-            grid-column: 4;
+            font-size: 8px;
         }
 
         .difficulty {
             color: #ff9f40;
-            font-size: 10px;
-            grid-column: 5;
+            font-size: 8px;
         }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
+        }
+
+        @media (max-width: 600px) {
+            #ui {
+                flex-direction: column;
+                gap: 4px;
+                padding: 6px 8px;
+            }
+
+            .game-header {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .game-title {
+                font-size: 10px;
+            }
+
+            .ui-stats {
+                width: 100%;
+                justify-content: space-around;
+                gap: 6px;
+            }
+
+            .ui-element {
+                font-size: 7px;
+                padding: 2px 4px;
+            }
+
+            .gmb-logo-img {
+                width: 35px;
+                height: 35px;
+            }
         }
 
         #controls {
@@ -415,14 +457,16 @@
                 <div class="game-title">PORT CARGO MASTER</div>
             </div>
             
-            <div class="ui-element lives">
-                <span>HEARTS:</span>
-                <div class="heart-container" id="heartsDisplay"></div>
+            <div class="ui-stats">
+                <div class="ui-element lives">
+                    <span>HEARTS:</span>
+                    <div class="heart-container" id="heartsDisplay"></div>
+                </div>
+                
+                <div class="ui-element timer" id="timerDisplay"><span>TIME:</span> <span id="timer">60</span>s</div>
+                <div class="ui-element score"><span>SCORE:</span> <span id="score">0</span></div>
+                <div class="ui-element difficulty"><span>SPEED:</span> <span id="speed">1.0</span>x <span>↑</span></div>
             </div>
-            
-            <div class="ui-element timer" id="timerDisplay"><span>TIME:</span> <span id="timer">60</span>s</div>
-            <div class="ui-element score"><span>SCORE:</span> <span id="score">0</span></div>
-            <div class="ui-element difficulty"><span>SPEED:</span> <span id="speed">1.0</span>x <span>↑</span></div>
         </div>
         
         <canvas id="gameCanvas"></canvas>
@@ -495,7 +539,8 @@
         let frameCount = 0;
         let shipSpeed = 1.0;
         let difficultyTimer = 0;
-        let lastDropWasSuccessful = false;
+        let lastFrameTime = 0;
+        let deltaTime = 0;
 
         // Set canvas size
         function resizeCanvas() {
@@ -884,27 +929,28 @@
         });
 
         function spawnContainers() {
-            if (containers.length < 10) {
-                const spacing = canvas.width / 12;
+            if (containers.length < 8) {
+                const spacing = canvas.width / 10;
                 
                 // Get colors of ships currently visible on screen
                 const visibleShipColors = ships
                     .filter(s => s.x < canvas.width && s.x > -s.width)
                     .map(s => s.requiredColor);
                 
-                // FIXED: Ensure at least one container per visible ship color
+                // FIXED: First, guarantee one container per visible ship color
                 for (let shipColor of visibleShipColors) {
                     const hasMatchingContainer = containers.find(c => 
                         !c.grabbed && !c.loaded && c.color === shipColor
                     );
-                    if (!hasMatchingContainer && containers.length < 10) {
-                        // Find an empty slot
-                        for (let i = 1; i <= 10; i++) {
+                    
+                    if (!hasMatchingContainer && containers.length < 8) {
+                        // Find the first empty slot
+                        for (let i = 1; i <= 8; i++) {
                             const slotX = i * spacing;
-                            const hasContainer = containers.find(c => 
-                                Math.abs(c.x - slotX) < 50
+                            const occupied = containers.some(c => 
+                                Math.abs(c.x - slotX) < 60
                             );
-                            if (!hasContainer) {
+                            if (!occupied) {
                                 containers.push(new Container(slotX - 30, 110, shipColor));
                                 break;
                             }
@@ -912,20 +958,20 @@
                     }
                 }
                 
-                // Fill remaining slots with DIVERSE random colors
-                if (containers.length < 10) {
-                    const colorRotation = ['#ff6b6b', '#6bcf7f', '#4dabf7', '#ffd93d', '#ff9f40'];
-                    let colorIndex = 0;
-                    
-                    for (let i = 1; i <= 10; i++) {
+                // Fill remaining slots with proper color rotation
+                if (containers.length < 8) {
+                    for (let i = 1; i <= 8; i++) {
                         const slotX = i * spacing;
-                        const hasContainer = containers.find(c => 
-                            Math.abs(c.x - slotX) < 50
+                        const occupied = containers.some(c => 
+                            Math.abs(c.x - slotX) < 60
                         );
-                        if (!hasContainer) {
-                            // Cycle through colors for diversity
-                            containers.push(new Container(slotX - 30, 110, colorRotation[colorIndex % colorRotation.length]));
-                            colorIndex++;
+                        
+                        if (!occupied) {
+                            // Rotate through ship colors for diversity
+                            const color = visibleShipColors.length > 0 
+                                ? visibleShipColors[i % visibleShipColors.length]
+                                : containerColors[i % containerColors.length];
+                            containers.push(new Container(slotX - 30, 110, color));
                         }
                     }
                 }
@@ -946,10 +992,11 @@
                 if (particles[i].life <= 0) particles.splice(i, 1);
             }
             
+            // FIXED: Difficulty timer - more stable
             difficultyTimer++;
             if (difficultyTimer >= 20 * 60) {
                 difficultyTimer = 0;
-                shipSpeed = Math.min(shipSpeed + 0.3, 3.0);
+                shipSpeed = Math.min(shipSpeed + 0.2, 2.5);
                 ships.forEach(s => s.speed = (1.5 + Math.random() * 0.5) * shipSpeed);
                 const ind = document.getElementById('speedIndicator');
                 ind.style.display = 'block';
@@ -1055,9 +1102,13 @@
             particles = [];
             gantry = new Gantry();
             
-            for (let lane = 0; lane < 6; lane++) {
-                const color = containerColors[Math.floor(Math.random() * containerColors.length)];
-                ships.push(new Ship(-150 - lane * 200, 195 + lane * 70, color, lane));
+            // FIXED: Only spawn 4 ships for 4 visible lanes
+            const shipYPositions = [195, 265, 335, 405];
+            const shipXOffsets = [0, 250, 500, 750];
+            
+            for (let i = 0; i < 4; i++) {
+                const color = containerColors[i % containerColors.length];
+                ships.push(new Ship(-150 - shipXOffsets[i], shipYPositions[i], color, i));
             }
             
             updateHeartsDisplay();
@@ -1104,10 +1155,6 @@
         }
 
         gameLoop();
-
-        document.addEventListener('touchmove', (e) => {
-            if (e.target.className.indexOf('btn-control') === -1) e.preventDefault();
-        }, { passive: false });
     </script>
 </body>
 </html>
