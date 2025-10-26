@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Port Cargo Master - Enhanced Edition</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -14,19 +14,25 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
         }
 
         body {
             font-family: 'Press Start 2P', monospace;
             background: #1a1a2e;
             overflow: hidden;
-            width: 100vw;
-            height: 100vh;
             display: flex;
             flex-direction: column;
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
+            -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: 100%;
         }
 
         #gameArea {
@@ -36,14 +42,15 @@
             justify-content: center;
             align-items: center;
             background: linear-gradient(180deg, #87CEEB 0%, #5599CC 100%);
+            overflow: hidden;
+            padding: 8px;
         }
 
         #gameCanvas {
             display: block;
             background: #87CEEB;
             image-rendering: pixelated;
-            border: 4px solid #000;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border: 2px solid #000;
             max-width: 100%;
             max-height: 100%;
         }
@@ -53,97 +60,136 @@
             top: 0;
             left: 0;
             right: 0;
-            padding: 15px 20px;
+            padding: 8px 10px;
             background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%);
             color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 12px;
+            font-size: 9px;
             z-index: 10;
             border-bottom: 3px solid #ffd93d;
+            gap: 8px;
+            flex-wrap: wrap;
+            row-gap: 4px;
         }
 
         .game-header {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 8px;
+            flex: 0 0 auto;
         }
 
         .gmb-logo-img {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             object-fit: contain;
             filter: drop-shadow(0 0 8px rgba(255, 217, 61, 0.5));
+            flex-shrink: 0;
         }
 
         .game-title {
-            font-size: 14px;
+            font-size: 12px;
             color: #ffd93d;
             text-shadow: 2px 2px 0 #000;
+            white-space: nowrap;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .ui-stats {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex: 0 0 auto;
         }
 
         .ui-element {
-            padding: 5px 10px;
-            text-shadow: 2px 2px 0 #000;
+            padding: 3px 6px;
+            text-shadow: 1px 1px 0 #000;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 3px;
+            font-size: 8px;
+            white-space: nowrap;
+            font-weight: bold;
+            background: rgba(0,0,0,0.5);
+            border-radius: 3px;
         }
 
         .lives { 
             color: #ff6b6b;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
 
         .heart-container {
             display: flex;
-            gap: 3px;
+            gap: 2px;
         }
 
         .heart-img {
-            width: 24px;
-            height: 24px;
+            width: 14px;
+            height: 14px;
             object-fit: contain;
-            animation: heartbeat 1s infinite;
-            margin: 0 2px;
-        }
-
-        @keyframes heartbeat {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            margin: 0;
         }
         
         .timer { 
             color: #ffd93d; 
-            font-size: 14px;
-            animation: pulse 1s infinite;
+            font-size: 8px;
         }
 
         .timer.warning {
             color: #ff6b6b;
-            animation: warning-pulse 0.5s infinite;
-        }
-
-        @keyframes warning-pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.1); }
+            animation: pulse 0.5s infinite;
         }
         
         .score { 
-            color: #6bcf7f; 
+            color: #6bcf7f;
+            font-size: 8px;
         }
 
         .difficulty {
             color: #ff9f40;
-            font-size: 10px;
+            font-size: 8px;
         }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
+            50% { opacity: 0.6; }
+        }
+
+        @media (max-width: 600px) {
+            #ui {
+                flex-direction: column;
+                gap: 4px;
+                padding: 6px 8px;
+            }
+
+            .game-header {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .game-title {
+                font-size: 10px;
+            }
+
+            .ui-stats {
+                width: 100%;
+                justify-content: space-around;
+                gap: 6px;
+            }
+
+            .ui-element {
+                font-size: 7px;
+                padding: 2px 4px;
+            }
+
+            .gmb-logo-img {
+                width: 35px;
+                height: 35px;
+            }
         }
 
         #controls {
@@ -152,54 +198,55 @@
             left: 0;
             right: 0;
             background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.95) 100%);
-            padding: 15px;
+            padding: 10px 8px;
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
-            border-top: 3px solid #ffd93d;
+            gap: 10px;
+            border-top: 2px solid #ffd93d;
             z-index: 100;
         }
 
         .control-group {
             display: flex;
-            gap: 10px;
+            gap: 6px;
             align-items: center;
         }
 
         .arrow-buttons {
             display: flex;
-            gap: 5px;
+            gap: 4px;
         }
 
         .btn-control {
             background: #4a4a4a;
-            border: 3px solid #2a2a2a;
+            border: 2px solid #2a2a2a;
             color: white;
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            border-radius: 8px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.1s;
-            box-shadow: 0 4px 0 #1a1a1a;
+            box-shadow: 0 3px 0 #1a1a1a;
             position: relative;
             touch-action: manipulation;
+            transition: none;
         }
 
         .btn-control:active {
-            transform: translateY(3px);
+            transform: translateY(2px);
             box-shadow: 0 1px 0 #1a1a1a;
         }
 
         .btn-control.arrow {
             background: #3a5a8a;
             border-color: #2a4a7a;
-            box-shadow: 0 4px 0 #1a3a6a;
+            box-shadow: 0 3px 0 #1a3a6a;
         }
 
         .btn-control.arrow:active {
@@ -207,22 +254,22 @@
         }
 
         .btn-control.action {
-            width: 80px;
-            height: 60px;
-            font-size: 12px;
+            width: 55px;
+            height: 45px;
+            font-size: 10px;
             font-family: 'Press Start 2P', monospace;
         }
 
         .btn-control.pick {
             background: #4CAF50;
             border-color: #3a9f40;
-            box-shadow: 0 4px 0 #2a8f30;
+            box-shadow: 0 3px 0 #2a8f30;
         }
 
         .btn-control.drop {
             background: #ff6b6b;
             border-color: #ef5b5b;
-            box-shadow: 0 4px 0 #df4b4b;
+            box-shadow: 0 3px 0 #df4b4b;
         }
 
         .btn-control.pick:active {
@@ -248,6 +295,7 @@
             z-index: 1000;
             padding: 20px;
             text-align: center;
+            overflow-y: auto;
         }
 
         #gameOverScreen {
@@ -255,72 +303,62 @@
         }
 
         h1 {
-            font-size: 28px;
-            margin-bottom: 30px;
+            font-size: 20px;
+            margin-bottom: 20px;
             color: #ffd93d;
-            text-shadow: 3px 3px 0 #ff6b6b, 6px 6px 0 #4dabf7;
-            letter-spacing: 3px;
-            animation: glow 2s infinite;
-        }
-
-        @keyframes glow {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            text-shadow: 2px 2px 0 #ff6b6b;
+            letter-spacing: 2px;
         }
 
         .btn-menu {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 15px 40px;
-            font-size: 14px;
+            padding: 12px 30px;
+            font-size: 11px;
             font-family: 'Press Start 2P', monospace;
             cursor: pointer;
             margin: 10px;
-            box-shadow: 0 6px 0 #4a4a8a, 0 10px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 0 #4a4a8a;
             text-transform: uppercase;
             letter-spacing: 1px;
             border-radius: 4px;
-            transition: all 0.2s;
-        }
-
-        .btn-menu:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 0 #4a4a8a, 0 12px 25px rgba(0,0,0,0.4);
+            transition: none;
         }
 
         .btn-menu:active {
             transform: translateY(2px);
-            box-shadow: 0 4px 0 #4a4a8a, 0 6px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 0 #4a4a8a;
         }
 
         .instructions {
-            font-size: 10px;
-            line-height: 2;
+            font-size: 9px;
+            line-height: 1.8;
             color: #87CEEB;
-            margin: 20px 0;
-            max-width: 500px;
+            margin: 15px 0;
+            max-width: 90vw;
             text-shadow: 1px 1px 0 #000;
         }
 
         .final-score {
-            font-size: 20px;
+            font-size: 16px;
             color: #6bcf7f;
-            margin: 20px 0;
+            margin: 15px 0;
             text-shadow: 2px 2px 0 #000;
         }
 
         #timeBonusIndicator {
             position: absolute;
-            top: 80px;
+            top: 70px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 18px;
+            font-size: 14px;
             color: #6bcf7f;
             text-shadow: 2px 2px 0 #000;
             z-index: 100;
             display: none;
             animation: bonusPulse 0.8s;
+            pointer-events: none;
         }
 
         @keyframes bonusPulse {
@@ -331,21 +369,83 @@
 
         #speedIndicator {
             position: absolute;
-            top: 120px;
+            top: 100px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 18px;
+            font-size: 14px;
             color: #ff9f40;
             text-shadow: 2px 2px 0 #000;
             z-index: 100;
             display: none;
             animation: speedPulse 0.5s;
+            pointer-events: none;
         }
 
         @keyframes speedPulse {
             0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
             50% { transform: translateX(-50%) scale(1.5); opacity: 1; }
             100% { transform: translateX(-50%) scale(1); opacity: 0.8; }
+        }
+
+        @media (max-width: 600px) {
+            #ui {
+                font-size: 8px;
+                padding: 6px 8px;
+                gap: 4px;
+            }
+
+            .game-header {
+                gap: 6px;
+            }
+
+            .gmb-logo-img {
+                width: 30px;
+                height: 30px;
+            }
+
+            .game-title {
+                font-size: 9px;
+            }
+
+            .ui-element {
+                font-size: 7px;
+                padding: 2px 4px;
+            }
+
+            .heart-img {
+                width: 12px;
+                height: 12px;
+            }
+
+            .btn-control {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .btn-control.action {
+                width: 50px;
+                height: 40px;
+                font-size: 9px;
+            }
+
+            #controls {
+                padding: 6px;
+                gap: 6px;
+            }
+
+            h1 {
+                font-size: 16px;
+            }
+
+            .instructions {
+                font-size: 8px;
+                line-height: 1.6;
+            }
+
+            .final-score {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -357,14 +457,16 @@
                 <div class="game-title">PORT CARGO MASTER</div>
             </div>
             
-            <div class="ui-element lives">
-                <span>HEARTS:</span>
-                <div class="heart-container" id="heartsDisplay"></div>
+            <div class="ui-stats">
+                <div class="ui-element lives">
+                    <span>HEARTS:</span>
+                    <div class="heart-container" id="heartsDisplay"></div>
+                </div>
+                
+                <div class="ui-element timer" id="timerDisplay"><span>TIME:</span> <span id="timer">60</span>s</div>
+                <div class="ui-element score"><span>SCORE:</span> <span id="score">0</span></div>
+                <div class="ui-element difficulty"><span>SPEED:</span> <span id="speed">1.0</span>x <span>↑</span></div>
             </div>
-            
-            <div class="ui-element timer" id="timerDisplay">⏱️ <span id="timer">60</span>s</div>
-            <div class="ui-element score">💰 <span id="score">0</span></div>
-            <div class="ui-element difficulty">SPEED: <span id="speed">1.0</span>x</div>
         </div>
         
         <canvas id="gameCanvas"></canvas>
@@ -381,8 +483,8 @@
             </div>
         </div>
         <div class="control-group">
-            <button class="btn-control action pick" id="btnPick" onclick="pickContainer()">PICK</button>
-            <button class="btn-control action drop" id="btnDrop" onclick="dropContainer()">DROP</button>
+            <button class="btn-control action pick" id="btnPick" ontouchstart="pickContainer()" ontouchend="pickContainer()" onmousedown="pickContainer()" onmouseup="">PICK</button>
+            <button class="btn-control action drop" id="btnDrop" ontouchstart="dropContainer()" ontouchend="dropContainer()" onmousedown="dropContainer()" onmouseup="">DROP</button>
         </div>
     </div>
 
@@ -390,7 +492,7 @@
         <h1>🚢 PORT CARGO MASTER 🚢</h1>
         <div class="instructions">
             ⚡ SHIPS MOVE CONTINUOUSLY - BE QUICK!<br><br>
-            🎮 USE ARROWS TO MOVE CRANE<br>
+            🎮 USE CONTROLS TO MOVE CRANE<br>
             📦 PRESS PICK TO GRAB CONTAINERS<br>
             🎯 PRESS DROP OVER MATCHING SHIP<br>
             ⚠️ DIFFICULTY INCREASES EVERY 20s<br><br>
@@ -412,15 +514,17 @@
 
     <script>
         const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false });
         ctx.imageSmoothingEnabled = false;
 
         // Image cache
         const imageCache = {};
         const spriteFiles = ['container-1.png', 'container-2.png', 'container-3.png', 'container-4.png', 'container-5.png', 'vessel-blue.png', 'vessel-green.png', 'vessel-red.png', 'vessel-yellow.png', 'vessel-grey.png', 'autohook.png', 'gmb-logo.png', 'heart.png', 'lost-heart.png'];
+        
         spriteFiles.forEach(file => {
             const img = new Image();
             img.src = `crane_commander/static/assets/elements/${file}`;
+            img.onerror = () => console.warn(`Failed to load: ${file}`);
             imageCache[file] = img;
         });
 
@@ -435,14 +539,13 @@
         let frameCount = 0;
         let shipSpeed = 1.0;
         let difficultyTimer = 0;
+        let lastFrameTime = 0;
+        let deltaTime = 0;
 
         // Set canvas size
         function resizeCanvas() {
-            const maxWidth = window.innerWidth;
-            const maxHeight = window.innerHeight - 200;
-            
-            canvas.width = Math.min(1305, maxWidth * 0.95);
-            canvas.height = Math.min(580, maxHeight);
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight - 120;
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
@@ -509,6 +612,8 @@
                     this.speed = (1.5 + Math.random() * 0.5) * shipSpeed;
                     this.containers = [];
                     this.hasScored = {};
+                    
+                    // FIXED: Don't use infinite loop - just pick random color
                     this.requiredColor = containerColors[Math.floor(Math.random() * containerColors.length)];
                 }
             }
@@ -625,6 +730,7 @@
                     }
                 }
                 
+                // FIXED: Bonus awarded ONLY on successful drop
                 if (matchingShip) {
                     container.loaded = true;
                     matchingShip.containers.push(container);
@@ -633,8 +739,14 @@
                         score += 100 * shipSpeed;
                         matchingShip.hasScored[container] = true;
                         
-                        new Audio('crane_commander/static/assets/sounds/success.mp3').play();
+                        // Play audio without blocking
+                        const playAudio = (url) => {
+                            const audio = new Audio(url);
+                            audio.play().catch(() => {});
+                        };
+                        playAudio('crane_commander/static/assets/sounds/success.mp3');
                         
+                        // FIXED: Bonus ONLY awarded here on successful drop
                         timeLeft += 2;
                         showTimeBonus();
                         
@@ -653,7 +765,11 @@
                 } else if (shipsBelow.length > 0) {
                     lives--;
                     updateHeartsDisplay();
-                    new Audio('crane_commander/static/assets/sounds/fail.mp3').play();
+                    const playAudio = (url) => {
+                        const audio = new Audio(url);
+                        audio.play().catch(() => {});
+                    };
+                    playAudio('crane_commander/static/assets/sounds/fail.mp3');
                     createParticles(container.x + container.width/2, container.y, '#ff0000', 15);
                 } else {
                     container.grabbed = false;
@@ -710,8 +826,37 @@
 
         function spawnExtraContainers() {
             const spacing = canvas.width / 12;
-            const emptySlots = [];
             
+            // Get colors of ships currently visible on screen
+            const visibleShipColors = ships
+                .filter(s => s.x < canvas.width && s.x > -s.width)
+                .map(s => s.requiredColor);
+            
+            // FIXED: Ensure each visible ship color has at least one container
+            for (let shipColor of visibleShipColors) {
+                const hasMatchingContainer = containers.find(c => 
+                    !c.grabbed && !c.loaded && c.color === shipColor
+                );
+                if (!hasMatchingContainer) {
+                    // Find an empty slot
+                    const emptySlots = [];
+                    for (let i = 1; i <= 10; i++) {
+                        const slotX = i * spacing;
+                        const hasContainer = containers.find(c => 
+                            !c.grabbed && !c.loaded && Math.abs(c.x - (slotX - 30)) < 40
+                        );
+                        if (!hasContainer) emptySlots.push(slotX);
+                    }
+                    
+                    if (emptySlots.length > 0) {
+                        const slotX = emptySlots[Math.floor(Math.random() * emptySlots.length)];
+                        containers.push(new Container(slotX - 30, 110, shipColor));
+                    }
+                }
+            }
+            
+            // Spawn 1-2 extra random containers if space available
+            const emptySlots = [];
             for (let i = 1; i <= 10; i++) {
                 const slotX = i * spacing;
                 const hasContainer = containers.find(c => 
@@ -720,25 +865,12 @@
                 if (!hasContainer) emptySlots.push(slotX);
             }
             
-            // Get colors of ships currently visible on screen
-            const visibleShipColors = ships
-                .filter(s => s.x < canvas.width && s.x > -s.width)
-                .map(s => s.requiredColor);
-            
             const spawnCount = Math.min(2, emptySlots.length);
             for (let i = 0; i < spawnCount; i++) {
                 const slotIndex = Math.floor(Math.random() * emptySlots.length);
                 const slotX = emptySlots[slotIndex];
-                
-                // Prioritize colors of visible ships
-                let color;
-                if (visibleShipColors.length > 0 && Math.random() < 0.7) {
-                    color = visibleShipColors[Math.floor(Math.random() * visibleShipColors.length)];
-                } else {
-                    color = containerColors[Math.floor(Math.random() * containerColors.length)];
-                }
-                
-                containers.push(new Container(slotX - 30, 110, color));
+                const randomColor = containerColors[Math.floor(Math.random() * containerColors.length)];
+                containers.push(new Container(slotX - 30, 110, randomColor));
                 emptySlots.splice(slotIndex, 1);
             }
         }
@@ -771,20 +903,12 @@
 
         function pickContainer() {
             if (gameState !== 'playing') return;
-            if (gantry.pick()) {
-                new Audio('crane_commander/static/assets/sounds/pick.mp3').play();
-                document.getElementById('btnPick').style.transform = 'scale(0.9)';
-                setTimeout(() => document.getElementById('btnPick').style.transform = 'scale(1)', 100);
-            }
+            gantry.pick();
         }
 
         function dropContainer() {
             if (gameState !== 'playing') return;
-            if (gantry.drop()) {
-                new Audio('crane_commander/static/assets/sounds/drop.mp3').play();
-                document.getElementById('btnDrop').style.transform = 'scale(0.9)';
-                setTimeout(() => document.getElementById('btnDrop').style.transform = 'scale(1)', 100);
-            }
+            gantry.drop();
         }
 
         document.addEventListener('keydown', (e) => {
@@ -805,24 +929,50 @@
         });
 
         function spawnContainers() {
-            if (containers.length < 10) {
-                const spacing = canvas.width / 12;
+            if (containers.length < 8) {
+                const spacing = canvas.width / 10;
                 
                 // Get colors of ships currently visible on screen
                 const visibleShipColors = ships
                     .filter(s => s.x < canvas.width && s.x > -s.width)
                     .map(s => s.requiredColor);
                 
-                for (let i = 1; i <= 10; i++) {
-                    if (!containers.find(c => Math.abs(c.x - i * spacing) < 40)) {
-                        // Prioritize colors of visible ships, otherwise random
-                        let color;
-                        if (visibleShipColors.length > 0 && Math.random() < 0.7) {
-                            color = visibleShipColors[Math.floor(Math.random() * visibleShipColors.length)];
-                        } else {
-                            color = containerColors[Math.floor(Math.random() * containerColors.length)];
+                // FIXED: First, guarantee one container per visible ship color
+                for (let shipColor of visibleShipColors) {
+                    const hasMatchingContainer = containers.find(c => 
+                        !c.grabbed && !c.loaded && c.color === shipColor
+                    );
+                    
+                    if (!hasMatchingContainer && containers.length < 8) {
+                        // Find the first empty slot
+                        for (let i = 1; i <= 8; i++) {
+                            const slotX = i * spacing;
+                            const occupied = containers.some(c => 
+                                Math.abs(c.x - slotX) < 60
+                            );
+                            if (!occupied) {
+                                containers.push(new Container(slotX - 30, 110, shipColor));
+                                break;
+                            }
                         }
-                        containers.push(new Container(i * spacing - 30, 110, color));
+                    }
+                }
+                
+                // Fill remaining slots with proper color rotation
+                if (containers.length < 8) {
+                    for (let i = 1; i <= 8; i++) {
+                        const slotX = i * spacing;
+                        const occupied = containers.some(c => 
+                            Math.abs(c.x - slotX) < 60
+                        );
+                        
+                        if (!occupied) {
+                            // Rotate through ship colors for diversity
+                            const color = visibleShipColors.length > 0 
+                                ? visibleShipColors[i % visibleShipColors.length]
+                                : containerColors[i % containerColors.length];
+                            containers.push(new Container(slotX - 30, 110, color));
+                        }
                     }
                 }
             }
@@ -842,10 +992,11 @@
                 if (particles[i].life <= 0) particles.splice(i, 1);
             }
             
+            // FIXED: Difficulty timer - more stable
             difficultyTimer++;
             if (difficultyTimer >= 20 * 60) {
                 difficultyTimer = 0;
-                shipSpeed = Math.min(shipSpeed + 0.3, 3.0);
+                shipSpeed = Math.min(shipSpeed + 0.2, 2.5);
                 ships.forEach(s => s.speed = (1.5 + Math.random() * 0.5) * shipSpeed);
                 const ind = document.getElementById('speedIndicator');
                 ind.style.display = 'block';
@@ -951,9 +1102,13 @@
             particles = [];
             gantry = new Gantry();
             
-            for (let lane = 0; lane < 6; lane++) {
-                const color = containerColors[Math.floor(Math.random() * containerColors.length)];
-                ships.push(new Ship(-150 - lane * 200, 195 + lane * 70, color, lane));
+            // FIXED: Only spawn 4 ships for 4 visible lanes
+            const shipYPositions = [195, 265, 335, 405];
+            const shipXOffsets = [0, 250, 500, 750];
+            
+            for (let i = 0; i < 4; i++) {
+                const color = containerColors[i % containerColors.length];
+                ships.push(new Ship(-150 - shipXOffsets[i], shipYPositions[i], color, i));
             }
             
             updateHeartsDisplay();
@@ -1000,10 +1155,6 @@
         }
 
         gameLoop();
-
-        document.addEventListener('touchmove', (e) => {
-            if (e.target.className.indexOf('btn-control') === -1) e.preventDefault();
-        }, { passive: false });
     </script>
 </body>
 </html>
