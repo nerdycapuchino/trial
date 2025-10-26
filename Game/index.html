@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Port Cargo Master - Enhanced Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background: #1a1a2e;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        #gameArea {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(180deg, #87CEEB 0%, #5599CC 100%);
+        }
+
+        #gameCanvas {
+            display: block;
+            background: #87CEEB;
+            image-rendering: pixelated;
+            border: 4px solid #000;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            z-index: 10;
+            border-bottom: 3px solid #ffd93d;
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .gmb-logo-img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px rgba(255, 217, 61, 0.5));
+        }
+
+        .game-title {
+            font-size: 14px;
+            color: #ffd93d;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .ui-element {
+            padding: 5px 10px;
+            text-shadow: 2px 2px 0 #000;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .lives { 
+            color: #ff6b6b;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .heart-container {
+            display: flex;
+            gap: 3px;
+        }
+
+        .heart-img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            animation: heartbeat 1s infinite;
+            margin: 0 2px;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .timer { 
+            color: #ffd93d; 
+            font-size: 14px;
+            animation: pulse 1s infinite;
+        }
+
+        .timer.warning {
+            color: #ff6b6b;
+            animation: warning-pulse 0.5s infinite;
+        }
+
+        @keyframes warning-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        
+        .score { 
+            color: #6bcf7f; 
+        }
+
+        .difficulty {
+            color: #ff9f40;
+            font-size: 10px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        #controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.95) 100%);
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            border-top: 3px solid #ffd93d;
+            z-index: 100;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .arrow-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-control {
+            background: #4a4a4a;
+            border: 3px solid #2a2a2a;
+            color: white;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+            box-shadow: 0 4px 0 #1a1a1a;
+            position: relative;
+            touch-action: manipulation;
+        }
+
+        .btn-control:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #1a1a1a;
+        }
+
+        .btn-control.arrow {
+            background: #3a5a8a;
+            border-color: #2a4a7a;
+            box-shadow: 0 4px 0 #1a3a6a;
+        }
+
+        .btn-control.arrow:active {
+            background: #4a6a9a;
+        }
+
+        .btn-control.action {
+            width: 80px;
+            height: 60px;
+            font-size: 12px;
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        .btn-control.pick {
+            background: #4CAF50;
+            border-color: #3a9f40;
+            box-shadow: 0 4px 0 #2a8f30;
+        }
+
+        .btn-control.drop {
+            background: #ff6b6b;
+            border-color: #ef5b5b;
+            box-shadow: 0 4px 0 #df4b4b;
+        }
+
+        .btn-control.pick:active {
+            background: #5CBF60;
+        }
+
+        .btn-control.drop:active {
+            background: #ff7b7b;
+        }
+
+        #startScreen, #gameOverScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 1000;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #gameOverScreen {
+            display: none;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: #ffd93d;
+            text-shadow: 3px 3px 0 #ff6b6b, 6px 6px 0 #4dabf7;
+            letter-spacing: 3px;
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .btn-menu {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 14px;
+            font-family: 'Press Start 2P', monospace;
+            cursor: pointer;
+            margin: 10px;
+            box-shadow: 0 6px 0 #4a4a8a, 0 10px 20px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-menu:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #4a4a8a, 0 12px 25px rgba(0,0,0,0.4);
+        }
+
+        .btn-menu:active {
+            transform: translateY(2px);
+            box-shadow: 0 4px 0 #4a4a8a, 0 6px 10px rgba(0,0,0,0.3);
+        }
+
+        .instructions {
+            font-size: 10px;
+            line-height: 2;
+            color: #87CEEB;
+            margin: 20px 0;
+            max-width: 500px;
+            text-shadow: 1px 1px 0 #000;
+        }
+
+        .final-score {
+            font-size: 20px;
+            color: #6bcf7f;
+            margin: 20px 0;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        #timeBonusIndicator {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            color: #6bcf7f;
+            text-shadow: 2px 2px 0 #000;
+            z-index: 100;
+            display: none;
+            animation: bonusPulse 0.8s;
+        }
+
+        @keyframes bonusPulse {
+            0% { transform: translateX(-50%) scale(0.5) translateY(20px); opacity: 0; }
+            50% { transform: translateX(-50%) scale(1.3) translateY(-10px); opacity: 1; }
+            100% { transform: translateX(-50%) scale(1) translateY(0); opacity: 0.8; }
+        }
+
+        #speedIndicator {
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            color: #ff9f40;
+            text-shadow: 2px 2px 0 #000;
+            z-index: 100;
+            display: none;
+            animation: speedPulse 0.5s;
+        }
+
+        @keyframes speedPulse {
+            0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
+            50% { transform: translateX(-50%) scale(1.5); opacity: 1; }
+            100% { transform: translateX(-50%) scale(1); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div id="ui">
+            <div class="game-header">
+                <img src="crane_commander/static/assets/elements/gmb-logo.png" alt="GMB Logo" class="gmb-logo-img">
+                <div class="game-title">PORT CARGO MASTER</div>
+            </div>
+            
+            <div class="ui-element lives">
+                <span>HEARTS:</span>
+                <div class="heart-container" id="heartsDisplay"></div>
+            </div>
+            
+            <div class="ui-element timer" id="timerDisplay">⏱️ <span id="timer">60</span>s</div>
+            <div class="ui-element score">💰 <span id="score">0</span></div>
+            <div class="ui-element difficulty">SPEED: <span id="speed">1.0</span>x</div>
+        </div>
+        
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="timeBonusIndicator">+2 SECONDS! ⏱️</div>
+        <div id="speedIndicator">SPEED UP! ⚡</div>
+    </div>
+
+    <div id="controls">
+        <div class="control-group">
+            <div class="arrow-buttons">
+                <button class="btn-control arrow" id="btnLeft" ontouchstart="moveLeft(true)" ontouchend="moveLeft(false)" onmousedown="moveLeft(true)" onmouseup="moveLeft(false)">◀</button>
+                <button class="btn-control arrow" id="btnRight" ontouchstart="moveRight(true)" ontouchend="moveRight(false)" onmousedown="moveRight(true)" onmouseup="moveRight(false)">▶</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <button class="btn-control action pick" id="btnPick" onclick="pickContainer()">PICK</button>
+            <button class="btn-control action drop" id="btnDrop" onclick="dropContainer()">DROP</button>
+        </div>
+    </div>
+
+    <div id="startScreen">
+        <h1>🚢 PORT CARGO MASTER 🚢</h1>
+        <div class="instructions">
+            ⚡ SHIPS MOVE CONTINUOUSLY - BE QUICK!<br><br>
+            🎮 USE ARROWS TO MOVE CRANE<br>
+            📦 PRESS PICK TO GRAB CONTAINERS<br>
+            🎯 PRESS DROP OVER MATCHING SHIP<br>
+            ⚠️ DIFFICULTY INCREASES EVERY 20s<br><br>
+            💯 COMBO POINTS FOR QUICK LOADING<br>
+            ⏱️ +2 SECONDS BONUS PER DROP!<br>
+            📦 MORE CONTAINERS SPAWN AFTER DROP!<br>
+            ❌ LOSE LIVES FOR WRONG COLORS<br>
+            🏆 SURVIVE AS LONG AS YOU CAN!
+        </div>
+        <button class="btn-menu" onclick="startGame()">START GAME</button>
+    </div>
+
+    <div id="gameOverScreen">
+        <h1 id="gameOverTitle">GAME OVER!</h1>
+        <div class="final-score">FINAL SCORE: <span id="finalScore">0</span></div>
+        <div id="gameOverMessage" class="instructions"></div>
+        <button class="btn-menu" onclick="restartGame()">PLAY AGAIN</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+
+        // Image cache
+        const imageCache = {};
+        const spriteFiles = ['container-1.png', 'container-2.png', 'container-3.png', 'container-4.png', 'container-5.png', 'vessel-blue.png', 'vessel-green.png', 'vessel-red.png', 'vessel-yellow.png', 'vessel-grey.png', 'autohook.png', 'gmb-logo.png', 'heart.png', 'lost-heart.png'];
+        spriteFiles.forEach(file => {
+            const img = new Image();
+            img.src = `crane_commander/static/assets/elements/${file}`;
+            imageCache[file] = img;
+        });
+
+        // Game state
+        let gameState = 'menu';
+        let score = 0;
+        let lives = 3;
+        let maxLives = 3;
+        let timeLeft = 60;
+        let combo = 0;
+        let lastLoadTime = 0;
+        let frameCount = 0;
+        let shipSpeed = 1.0;
+        let difficultyTimer = 0;
+
+        // Set canvas size
+        function resizeCanvas() {
+            const maxWidth = window.innerWidth;
+            const maxHeight = window.innerHeight - 200;
+            
+            canvas.width = Math.min(1305, maxWidth * 0.95);
+            canvas.height = Math.min(580, maxHeight);
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Container class
+        class Container {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.width = 60;
+                this.height = 30;
+                this.color = color;
+                this.grabbed = false;
+                this.loaded = false;
+            }
+
+            draw() {
+                let spriteFile;
+                if (this.color === '#6bcf7f') spriteFile = 'container-5.png';
+                else if (this.color === '#ffd93d') spriteFile = 'container-2.png';
+                else if (this.color === '#4dabf7') spriteFile = 'container-1.png';
+                else if (this.color === '#ff6b6b') spriteFile = 'container-3.png';
+                else spriteFile = 'container-4.png';
+                
+                if (imageCache[spriteFile] && imageCache[spriteFile].complete) {
+                    try { ctx.drawImage(imageCache[spriteFile], this.x, this.y, this.width, this.height); } catch(e) {}
+                }
+            }
+        }
+
+        // Ship class
+        class Ship {
+            constructor(x, y, requiredColor, lane) {
+                this.x = x;
+                this.y = y;
+                this.width = 235;
+                this.height = 200;
+                this.requiredColor = requiredColor;
+                this.containers = [];
+                this.maxContainers = 1;
+                this.lane = lane;
+                this.speed = (1.5 + Math.random() * 0.5) * shipSpeed;
+                this.hasScored = {};
+            }
+
+            draw() {
+                let spriteFile;
+                if (this.requiredColor === '#6bcf7f') spriteFile = 'vessel-green.png';
+                else if (this.requiredColor === '#ffd93d') spriteFile = 'vessel-yellow.png';
+                else if (this.requiredColor === '#4dabf7') spriteFile = 'vessel-blue.png';
+                else if (this.requiredColor === '#ff6b6b') spriteFile = 'vessel-red.png';
+                else spriteFile = 'vessel-grey.png';
+                
+                if (imageCache[spriteFile] && imageCache[spriteFile].complete) {
+                    try { ctx.drawImage(imageCache[spriteFile], this.x, this.y, this.width, this.height); } catch(e) {}
+                }
+            }
+
+            update() {
+                this.x += this.speed;
+                
+                if (this.x > canvas.width) {
+                    this.x = -this.width - Math.random() * 200;
+                    this.speed = (1.5 + Math.random() * 0.5) * shipSpeed;
+                    this.containers = [];
+                    this.hasScored = {};
+                    this.requiredColor = containerColors[Math.floor(Math.random() * containerColors.length)];
+                }
+            }
+
+            canLoad(container) {
+                return this.containers.length < this.maxContainers && container.color === this.requiredColor;
+            }
+        }
+
+        // Gantry crane class
+        class Gantry {
+            constructor() {
+                this.x = canvas.width / 2;
+                this.y = 40;
+                this.width = 50;
+                this.height = 20;
+                this.grabbedContainer = null;
+                this.speed = 6;
+                this.movingLeft = false;
+                this.movingRight = false;
+                this.canPick = true;
+                this.pickCooldown = 0;
+            }
+
+            draw() {
+                ctx.fillStyle = '#2a2a2a';
+                ctx.fillRect(0, 30, canvas.width, 10);
+                ctx.fillStyle = '#3a3a3a';
+                ctx.fillRect(0, 32, canvas.width, 6);
+                
+                ctx.strokeStyle = '#1a1a1a';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < canvas.width; i += 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 35);
+                    ctx.lineTo(i + 15, 35);
+                    ctx.stroke();
+                }
+                
+                ctx.fillStyle = '#ff6b6b';
+                ctx.fillRect(this.x - this.width/2, 25, this.width, this.height);
+                
+                ctx.fillStyle = '#ff8b8b';
+                ctx.fillRect(this.x - this.width/2 + 2, 27, this.width - 4, 3);
+                
+                ctx.fillStyle = '#ff5555';
+                ctx.fillRect(this.x - 10, 20, 20, 10);
+                
+                ctx.strokeStyle = '#444';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(this.x, 45);
+                ctx.lineTo(this.x, 80);
+                ctx.stroke();
+                
+                if (imageCache['autohook.png'] && imageCache['autohook.png'].complete) {
+                    try { ctx.drawImage(imageCache['autohook.png'], this.x - 17.5, 65, 35, 28); } catch(e) {}
+                }
+                
+                if (this.grabbedContainer) {
+                    ctx.fillStyle = '#6bcf7f';
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, 15);
+                    ctx.lineTo(this.x - 6, 5);
+                    ctx.lineTo(this.x + 6, 5);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+
+            update() {
+                if (this.movingLeft && this.x > 30) this.x -= this.speed;
+                if (this.movingRight && this.x < canvas.width - 30) this.x += this.speed;
+                
+                if (this.grabbedContainer) {
+                    this.grabbedContainer.x = this.x - this.grabbedContainer.width / 2;
+                    this.grabbedContainer.y = 85;
+                }
+                
+                if (this.pickCooldown > 0) this.pickCooldown--;
+            }
+
+            pick() {
+                if (this.grabbedContainer || this.pickCooldown > 0) return false;
+                
+                for (let container of containers) {
+                    if (!container.grabbed && !container.loaded) {
+                        const dist = Math.abs(container.x + container.width/2 - this.x);
+                        if (dist < 30) {
+                            this.grabbedContainer = container;
+                            container.grabbed = true;
+                            this.pickCooldown = 10;
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            drop() {
+                if (!this.grabbedContainer) return false;
+                
+                const container = this.grabbedContainer;
+                const shipsBelow = ships.filter(ship => 
+                    container.x + container.width/2 > ship.x && 
+                    container.x + container.width/2 < ship.x + ship.width
+                );
+                
+                let matchingShip = null;
+                for (let ship of shipsBelow) {
+                    if (ship.canLoad(container)) {
+                        matchingShip = ship;
+                        break;
+                    }
+                }
+                
+                if (matchingShip) {
+                    container.loaded = true;
+                    matchingShip.containers.push(container);
+                    
+                    if (!matchingShip.hasScored[container]) {
+                        score += 100 * shipSpeed;
+                        matchingShip.hasScored[container] = true;
+                        
+                        new Audio('crane_commander/static/assets/sounds/success.mp3').play();
+                        
+                        timeLeft += 2;
+                        showTimeBonus();
+                        
+                        const now = Date.now();
+                        if (now - lastLoadTime < 2000) {
+                            combo++;
+                            score += combo * 50;
+                        } else {
+                            combo = 0;
+                        }
+                        lastLoadTime = now;
+                        spawnExtraContainers();
+                    }
+                    
+                    createParticles(container.x + container.width/2, container.y, container.color);
+                } else if (shipsBelow.length > 0) {
+                    lives--;
+                    updateHeartsDisplay();
+                    new Audio('crane_commander/static/assets/sounds/fail.mp3').play();
+                    createParticles(container.x + container.width/2, container.y, '#ff0000', 15);
+                } else {
+                    container.grabbed = false;
+                    container.y = 110;
+                }
+                
+                this.grabbedContainer = null;
+                return true;
+            }
+        }
+
+        let gantry = new Gantry();
+        let containers = [];
+        let ships = [];
+        let particles = [];
+        let containerColors = ['#ff6b6b', '#6bcf7f', '#4dabf7', '#ffd93d', '#ff9f40'];
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = Math.random() * -5 - 2;
+                this.color = color;
+                this.life = 25;
+                this.size = Math.random() * 5 + 3;
+            }
+
+            draw() {
+                ctx.globalAlpha = this.life / 25;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+                ctx.globalAlpha = 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.3;
+                this.life--;
+                this.size *= 0.95;
+            }
+        }
+
+        function createParticles(x, y, color, count = 12) {
+            for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color));
+        }
+
+        function showTimeBonus() {
+            const indicator = document.getElementById('timeBonusIndicator');
+            indicator.style.display = 'block';
+            setTimeout(() => indicator.style.display = 'none', 800);
+        }
+
+        function spawnExtraContainers() {
+            const spacing = canvas.width / 12;
+            const emptySlots = [];
+            
+            for (let i = 1; i <= 10; i++) {
+                const slotX = i * spacing;
+                const hasContainer = containers.find(c => 
+                    !c.grabbed && !c.loaded && Math.abs(c.x - (slotX - 30)) < 40
+                );
+                if (!hasContainer) emptySlots.push(slotX);
+            }
+            
+            // Get colors of ships currently visible on screen
+            const visibleShipColors = ships
+                .filter(s => s.x < canvas.width && s.x > -s.width)
+                .map(s => s.requiredColor);
+            
+            const spawnCount = Math.min(2, emptySlots.length);
+            for (let i = 0; i < spawnCount; i++) {
+                const slotIndex = Math.floor(Math.random() * emptySlots.length);
+                const slotX = emptySlots[slotIndex];
+                
+                // Prioritize colors of visible ships
+                let color;
+                if (visibleShipColors.length > 0 && Math.random() < 0.7) {
+                    color = visibleShipColors[Math.floor(Math.random() * visibleShipColors.length)];
+                } else {
+                    color = containerColors[Math.floor(Math.random() * containerColors.length)];
+                }
+                
+                containers.push(new Container(slotX - 30, 110, color));
+                emptySlots.splice(slotIndex, 1);
+            }
+        }
+
+        function updateHeartsDisplay() {
+            const hc = document.getElementById('heartsDisplay');
+            hc.innerHTML = '';
+            
+            for (let i = 0; i < maxLives; i++) {
+                const img = document.createElement('img');
+                img.className = 'heart-img';
+                img.src = `crane_commander/static/assets/elements/${i >= lives ? 'lost-heart.png' : 'heart.png'}`;
+                img.onerror = () => img.textContent = i >= lives ? '🖤' : '❤️';
+                hc.appendChild(img);
+            }
+        }
+
+        let leftPressed = false;
+        let rightPressed = false;
+
+        function moveLeft(pressed) {
+            leftPressed = pressed;
+            gantry.movingLeft = pressed;
+        }
+
+        function moveRight(pressed) {
+            rightPressed = pressed;
+            gantry.movingRight = pressed;
+        }
+
+        function pickContainer() {
+            if (gameState !== 'playing') return;
+            if (gantry.pick()) {
+                new Audio('crane_commander/static/assets/sounds/pick.mp3').play();
+                document.getElementById('btnPick').style.transform = 'scale(0.9)';
+                setTimeout(() => document.getElementById('btnPick').style.transform = 'scale(1)', 100);
+            }
+        }
+
+        function dropContainer() {
+            if (gameState !== 'playing') return;
+            if (gantry.drop()) {
+                new Audio('crane_commander/static/assets/sounds/drop.mp3').play();
+                document.getElementById('btnDrop').style.transform = 'scale(0.9)';
+                setTimeout(() => document.getElementById('btnDrop').style.transform = 'scale(1)', 100);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (gameState !== 'playing') return;
+            switch(e.key) {
+                case 'ArrowLeft': case 'a': case 'A': moveLeft(true); break;
+                case 'ArrowRight': case 'd': case 'D': moveRight(true); break;
+                case ' ': case 'ArrowUp': case 'w': case 'W': pickContainer(); break;
+                case 'ArrowDown': case 's': case 'S': dropContainer(); break;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft': case 'a': case 'A': moveLeft(false); break;
+                case 'ArrowRight': case 'd': case 'D': moveRight(false); break;
+            }
+        });
+
+        function spawnContainers() {
+            if (containers.length < 10) {
+                const spacing = canvas.width / 12;
+                
+                // Get colors of ships currently visible on screen
+                const visibleShipColors = ships
+                    .filter(s => s.x < canvas.width && s.x > -s.width)
+                    .map(s => s.requiredColor);
+                
+                for (let i = 1; i <= 10; i++) {
+                    if (!containers.find(c => Math.abs(c.x - i * spacing) < 40)) {
+                        // Prioritize colors of visible ships, otherwise random
+                        let color;
+                        if (visibleShipColors.length > 0 && Math.random() < 0.7) {
+                            color = visibleShipColors[Math.floor(Math.random() * visibleShipColors.length)];
+                        } else {
+                            color = containerColors[Math.floor(Math.random() * containerColors.length)];
+                        }
+                        containers.push(new Container(i * spacing - 30, 110, color));
+                    }
+                }
+            }
+        }
+
+        function updateGame() {
+            if (gameState !== 'playing') return;
+            
+            frameCount++;
+            gantry.update();
+            spawnContainers();
+            ships.forEach(s => s.update());
+            containers = containers.filter(c => !c.loaded || c.x < canvas.width);
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                if (particles[i].life <= 0) particles.splice(i, 1);
+            }
+            
+            difficultyTimer++;
+            if (difficultyTimer >= 20 * 60) {
+                difficultyTimer = 0;
+                shipSpeed = Math.min(shipSpeed + 0.3, 3.0);
+                ships.forEach(s => s.speed = (1.5 + Math.random() * 0.5) * shipSpeed);
+                const ind = document.getElementById('speedIndicator');
+                ind.style.display = 'block';
+                setTimeout(() => ind.style.display = 'none', 1000);
+            }
+            
+            if (frameCount % 60 === 0) timeLeft--;
+            if (lives <= 0 || timeLeft <= 0) gameOver();
+        }
+
+        function drawGame() {
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            grad.addColorStop(0, '#87CEEB');
+            grad.addColorStop(1, '#5599CC');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            for (let i = 0; i < 5; i++) {
+                const x = (i * 180 + frameCount * 0.2) % (canvas.width + 100) - 50;
+                const y = 50 + i * 15;
+                ctx.fillRect(x, y, 60, 15);
+                ctx.fillRect(x + 10, y - 5, 40, 15);
+                ctx.fillRect(x + 20, y - 8, 20, 15);
+            }
+            
+            ctx.fillStyle = '#8B7355';
+            ctx.fillRect(0, 140, canvas.width, 30);
+            ctx.fillStyle = '#7B6345';
+            for (let i = 0; i < canvas.width; i += 40) {
+                ctx.fillRect(i, 140, 2, 30);
+                ctx.fillRect(i, 145, 35, 2);
+            }
+            
+            for (let lane = 0; lane < 6; lane++) {
+                const y = 200 + lane * 70;
+                ctx.fillStyle = '#4A90E2';
+                ctx.fillRect(0, y, canvas.width, 65);
+                ctx.fillStyle = '#3A80D2';
+                for (let i = 0; i < canvas.width; i += 20) {
+                    const wh = Math.sin((i + frameCount * 2) / 30) * 6;
+                    ctx.fillRect(i, y + wh, 15, 3);
+                }
+            }
+            
+            ships.forEach(s => s.draw());
+            containers.forEach(c => { if (!c.grabbed) c.draw(); });
+            gantry.draw();
+            
+            if (gantry.grabbedContainer) {
+                gantry.grabbedContainer.draw();
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(gantry.x - 15, 95);
+                ctx.lineTo(gantry.x - 15, canvas.height);
+                ctx.moveTo(gantry.x + 15, 95);
+                ctx.lineTo(gantry.x + 15, canvas.height);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            particles.forEach(p => p.draw());
+            
+            if (combo > 1) {
+                ctx.save();
+                ctx.fillStyle = '#ffd93d';
+                ctx.font = 'bold 24px "Press Start 2P"';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = '#ff6b6b';
+                ctx.shadowBlur = 10;
+                ctx.fillText(combo + 'x COMBO!', canvas.width / 2, 180);
+                ctx.restore();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('timer').textContent = Math.max(0, timeLeft);
+            document.getElementById('speed').textContent = shipSpeed.toFixed(1);
+            
+            const td = document.getElementById('timerDisplay');
+            if (timeLeft <= 10) td.classList.add('warning');
+            else td.classList.remove('warning');
+        }
+
+        function startGame() {
+            gameState = 'playing';
+            score = 0;
+            lives = 3;
+            timeLeft = 60;
+            combo = 0;
+            frameCount = 0;
+            shipSpeed = 1.0;
+            difficultyTimer = 0;
+            containers = [];
+            ships = [];
+            particles = [];
+            gantry = new Gantry();
+            
+            for (let lane = 0; lane < 6; lane++) {
+                const color = containerColors[Math.floor(Math.random() * containerColors.length)];
+                ships.push(new Ship(-150 - lane * 200, 195 + lane * 70, color, lane));
+            }
+            
+            updateHeartsDisplay();
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+        }
+
+        function gameOver() {
+            gameState = 'over';
+            document.getElementById('finalScore').textContent = score;
+            
+            let title, message;
+            if (score >= 5000) {
+                title = '🏆 LEGENDARY! 🏆';
+                message = 'You are the ultimate Port Master! Incredible skills!';
+            } else if (score >= 3000) {
+                title = '⭐ AMAZING! ⭐';
+                message = 'Outstanding cargo management! You\'re a pro!';
+            } else if (score >= 1500) {
+                title = '👏 GREAT JOB! 👏';
+                message = 'Good work! Keep practicing to master the port!';
+            } else if (score >= 800) {
+                title = '👍 NICE TRY! 👍';
+                message = 'Not bad! The ships are tricky, aren\'t they?';
+            } else {
+                title = '💪 KEEP GOING! 💪';
+                message = 'Don\'t give up! Practice makes perfect!';
+            }
+            
+            document.getElementById('gameOverTitle').innerHTML = title;
+            document.getElementById('gameOverMessage').textContent = message;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function gameLoop() {
+            updateGame();
+            drawGame();
+            updateUI();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+
+        document.addEventListener('touchmove', (e) => {
+            if (e.target.className.indexOf('btn-control') === -1) e.preventDefault();
+        }, { passive: false });
+    </script>
+</body>
+</html>
